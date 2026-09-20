@@ -47,7 +47,7 @@
 
 - Контекст - микросервис - Управление программами лояльности *сервис-партнер* - *сервис-партнеры* предлагающие оплату нашей подписки (по программе лояльности) у себя в ПО + любая друга бизнес-логика. 1 сервис на 1 интеграцию с партнером
 
-[Карта контекстов (без взаимодействий)](https://github.com/killtoyz/architecture-cinemaabyss/blob/cinema/diagrams/c4-domains-drawio-png.png)
+[Карта контекстов (без взаимодействий)](https://github.com/killtoyz/architecture-cinemaabyss/blob/cinema/diagrams/c4-domains-view/c4-domains-drawio-png.png)
 
 [Диаграмма контейнеров]() 
 
