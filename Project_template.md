@@ -51,6 +51,8 @@
 
 [Диаграмма контейнеров](https://github.com/killtoyz/architecture-cinemaabyss/blob/cinema/diagrams/c4-container-view/c4-container-view.puml)
 
+Сервис Movie (который сейчас пользуется общей БД с монолитом) - это будущий catalogManagement
+
 # Задание 2
 
 ### 1. Proxy

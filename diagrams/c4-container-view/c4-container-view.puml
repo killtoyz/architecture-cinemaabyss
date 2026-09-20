@@ -1,4 +1,4 @@
-@startuml smarthome-app-cntr-view-to-be
+@startuml cinemaabyss-container-view
 
 !includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
