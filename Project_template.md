@@ -49,7 +49,7 @@
 
 [Карта контекстов (без взаимодействий)](https://github.com/killtoyz/architecture-cinemaabyss/blob/cinema/diagrams/c4-domains-view/c4-domains-drawio-png.png)
 
-[Диаграмма контейнеров]() 
+[Диаграмма контейнеров](https://github.com/killtoyz/architecture-cinemaabyss/blob/cinema/diagrams/c4-container-view/c4-container-view.puml)
 
 # Задание 2
 
