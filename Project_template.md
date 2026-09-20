@@ -55,55 +55,23 @@
 
 # Задание 2
 
+- Тесты запускал 4 раза. Были ошибки с createSubscription
+
+- Был установлен newman (репорты есть в папке тестов)
+
 ### 1. Proxy
-Команда КиноБездны уже выделила сервис метаданных о фильмах movies и вам необходимо реализовать бесшовный переход с применением паттерна Strangler Fig в части реализации прокси-сервиса (API Gateway), с помощью которого можно будет постепенно переключать траффик, используя фиче-флаг.
+С кодом помогал агент
 
-
-Реализуйте сервис на любом языке программирования в ./src/microservices/proxy.
-Конфигурация для запуска сервиса через docker-compose уже добавлена
-```yaml
-  proxy-service:
-    build:
-      context: ./src/microservices/proxy
-      dockerfile: Dockerfile
-    container_name: cinemaabyss-proxy-service
-    depends_on:
-      - monolith
-      - movies-service
-      - events-service
-    ports:
-      - "8000:8000"
-    environment:
-      PORT: 8000
-      MONOLITH_URL: http://monolith:8080
-      #монолит
-      MOVIES_SERVICE_URL: http://movies-service:8081 #сервис movies
-      EVENTS_SERVICE_URL: http://events-service:8082 
-      GRADUAL_MIGRATION: "true" # вкл/выкл простого фиче-флага
-      MOVIES_MIGRATION_PERCENT: "50" # процент миграции
-    networks:
-      - cinemaabyss-network
-```
-
-- После реализации запустите postman тесты - они все должны быть зеленые (кроме events).
-- Отправьте запросы к API Gateway:
-   ```bash
-   curl http://localhost:8000/api/movies
-   ```
-- Протестируйте постепенный переход, изменив переменную окружения MOVIES_MIGRATION_PERCENT в файле docker-compose.yml.
-
+[Скрин-тестов](https://github.com/killtoyz/architecture-cinemaabyss/blob/cinema/screenshot/postman-tests.png)
 
 ### 2. Kafka
- Вам как архитектуру нужно также проверить гипотезу насколько просто реализовать применение Kafka в данной архитектуре.
+С кодом помогал агент
 
-Для этого нужно сделать MVP сервис events, который будет при вызове API создавать и сам же читать сообщения в топике Kafka.
-
-    - Разработайте сервис на любом языке программирования с consumer'ами и producer'ами.
-    - Реализуйте простой API, при вызове которого будут создаваться события User/Payment/Movie и обрабатываться внутри сервиса с записью в лог
-    - Добавьте в docker-compose новый сервис, kafka там уже есть
-
-Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
-Приложите скриншот тестов и скриншот состояния топиков Kafka из UI http://localhost:8090 
+[Брокер](https://github.com/killtoyz/architecture-cinemaabyss/blob/cinema/screenshot/kafka-brokers.png)
+[Сообщения в топике movie](https://github.com/killtoyz/architecture-cinemaabyss/blob/cinema/screenshot/kafka-movie-messages.png)
+[Сообщения в топике payment](https://github.com/killtoyz/architecture-cinemaabyss/blob/cinema/screenshot/kafka-payment-messages.png)
+[Сообщения в топике user](https://github.com/killtoyz/architecture-cinemaabyss/blob/cinema/screenshot/kafka-user-messages.png)
+[Топики](https://github.com/killtoyz/architecture-cinemaabyss/blob/cinema/screenshot/kafka-topics.png)
 
 # Задание 3
 
