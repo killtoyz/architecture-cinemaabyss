@@ -22,11 +22,7 @@ jobs:
       
       - name: Start services with Docker Compose
         run: |
-          docker compose up -d
-          
-          # Wait for services to be ready
-          echo "Waiting for services to be ready..."
-          sleep 120
+          docker compose up -d --wait
       
       - name: Install Newman and dependencies
         working-directory: tests/postman
