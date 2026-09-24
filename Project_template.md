@@ -222,7 +222,7 @@ cat .docker/config.json | base64
 
   5. Разверните монолит:
   ```bash
-  kubectl apply -f src/kubernetes/monolith.yaml
+  kubectl apply -f src/kubernetes/monolith.yaml  [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("killtoyz: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"))
   ```
   6. Разверните микросервисы:
   ```bash
