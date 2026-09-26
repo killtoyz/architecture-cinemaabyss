@@ -2,23 +2,10 @@ name: API Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, cinema ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, cinema ]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to run tests against'
-        required: true
-        default: 'docker'
-        type: choice
-        options:
-          - local
-          - docker
-      test_folder:
-        description: 'Test folder to run (leave empty for all)'
-        required: false
-        type: string
 
 jobs:
   api-tests:
@@ -27,7 +14,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Set up Docker Compose
         run: |
@@ -35,17 +22,7 @@ jobs:
       
       - name: Start services with Docker Compose
         run: |
-          docker compose up -d
-          # Wait for services to be ready
-          echo "Waiting for services to be ready..."
-          sleep 120
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: tests/postman/package-lock.json
+          docker compose up -d --wait
       
       - name: Install Newman and dependencies
         working-directory: tests/postman
@@ -55,16 +32,10 @@ jobs:
         working-directory: tests/postman
         run: |
 
-          docker compose up -d
-          # Wait for services to be ready
-          echo "Waiting for services to be ready..."
-          sleep 15
           # Build the Docker image
-          docker build -t cinemaabyss-api-tests .
-          
+          docker build -t cinemaabyss-api-tests .     
           # Run the tests in Docker
-          docker run --network=cinemaabyss-network -v "$(pwd)/reports:/app/reports" cinemaabyss-api-tests
-        
+          docker run --network=cinemaabyss-network -v "$(pwd)/reports:/app/reports" cinemaabyss-api-tests       
       
       - name: Stop services
         if: always()

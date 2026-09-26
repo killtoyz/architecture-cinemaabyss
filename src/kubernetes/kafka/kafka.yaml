@@ -172,5 +172,4 @@ spec:
           periodSeconds: 20
       volumes:
       - name: kafka-data
-        persistentVolumeClaim:
-          claimName: kafka-data
+        emptyDir: {}

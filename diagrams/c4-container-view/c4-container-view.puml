@@ -1,0 +1,156 @@
+@startuml cinemaabyss-container-view
+
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(user, "Пользователь", "Смотрит контент, оформляет подписку")
+
+System_Boundary(cinemaabyss, "Кинобездна") {
+
+    Container(mobileApp, "Mobile App", "Kotlin, Swift", "Клиент для смартфонов")
+    Container(webApp, "Web App", "TypeScript, React", "Клиент для десктопа")
+    Container(tvApp, "TV App", "Android TV", "Клиент для телевизоров")
+
+    Container(bffMobileWeb, "BFF: Mobile & Web", "Go", "Агрегирует ответы микросервисов под мобильный и веб-клиент. Намеренно не содержит бизнес-логики")
+    Container(bffTv, "BFF: TV", "Go", "Агрегирует ответы доменных сервисов под ТВ-клиент. Намеренно не содержит бизнес-логики")
+
+    Container(apiGateway, "API Gateway (Proxy)", "Go", "Маршрутизирует запросы, реализует аутентификацию, балансировку нагрузки, кэширование, ограничение частоты запросов и т.д.")
+    ContainerQueue(eventBus, "Event Bus", "Kafka", "Обеспечивает коммуникацию между сервисами на основе событий")
+
+    Boundary(userManagement, "Управление данными пользователями", "Домен") {
+        Boundary(userLK, "Управление личным кабинетом(профилем)", "Поддомен") {
+            Container(profileManagement, "Microservice: Profiling", "Go", "Управление данными ЛК (личная информация, устройтва пользователя и т.д.)")
+            ContainerDb(profileDb, "Profile Database", "PostgreSQL", "Данные ЛК")
+        }
+        Boundary(userIdentity, "Управление УЗ", "Поддомен") {
+            Container(userRegistry, "Microservice: UserRegistry", "Go", "Регистрация, создание ЛК, восстановление доступа")
+            ContainerDb(userDb, "Users Database", "PostgreSQL", "Данные УЗ")
+        }
+    }
+
+    Boundary(contentManagement, "Управление контентом", "Домен") {
+        Boundary(catalogManagement, "Управление каталогом контента", "Поддомен") {
+            Container(catalog, "Microservice: catalogManagement", "Go", "Публикация каталога контента. Фильмов, видео и т.д. Установление зависимости контента от устройства. Поиск, фильтрация")
+            ContainerDb(catalogDb, "catalog Database", "MongoDB", "Данные каталога")
+            Container(serviceIntegration, "Microservice: ServiceIntegration", "Go", "Получение и обновление контента, который предоставлет сервис. Установление типа контента")
+            ContainerDb(serviceDb, "Service Database", "MongoDB", "Данные сервисов")
+            Container(personalizationOptions, "Microservice: PersonalizationOptions", "Go", "Управление функциями истории просмотров, избранного, оценками и т.д.")
+            ContainerDb(personalizationDb, "Personalization Database", "PostgreSQL", "Персонализированные данные пользователя")
+            Container(serviceRightsManagement, "Microservice: ServiceRightsManagement", "Go", "Проверка прав доступа на контент, сверка с данными внешнего сервиса. Например, истёк срок действия договора с сервисом-партнером")
+            ContainerDb(serviceRightsDb, "Service Rights Database", "PostgreSQL", "Данные о договорах с партнерами")
+        }
+
+        Boundary(playbackManagement, "Управление просмотром", "Поддомен") {
+            Container(playback, "Microservice: PlaybackManagement", "Go", "Воспроизведение контента на разных устройствах")
+            ContainerDb(playbackDb, "ContentStorage", "S3", "Контент")
+        }
+    }
+
+    Boundary(monetizationManagement, "Управление монетизацией", "Домен") {
+        Boundary(paymentManagement, "Платежный сервис", "Поддомен") {
+            Container(payment, "Microservice: PaymentManagement", "Go", "Управление жизненным циклом платежей, возвратами, подтверждениями и т.д.")
+            ContainerDb(paymentDb, "Payment Database", "PostgreSQL", "Данные платежей и их обработке")
+        }
+
+        Boundary(pricingManagement, "Управление ценами и скидками", "Поддомен") {
+            Container(product, "Microservice: ProductManagement", "Go", "Тарифные планы и что в них входит (источники контента, устройства и т.д.), ведение каталога цен, доступности.")
+            ContainerDb(productDb, "Product Database", "PostgreSQL", "Данные тарифных планов и цен")
+            Container(sales, "Microservice: SalesManagement", "Go", "Управление жизненным циклом скидок и других акций")
+            ContainerDb(salesDb, "Sales Database", "PostgreSQL", "Данные скидок, акций")
+        }
+
+        Boundary(subAndPermManagement, "Управление подписками и правами доступа", "Поддомен") {
+            Container(sub, "Microservice: SubManagement", "Go", "Управление жизненным циклом подписки пользователя. Установление права доступа к контенту по подписке")
+            ContainerDb(subDb, "Sub Database", "PostgreSQL", "Данные подписок")
+            Container(perm, "Microservice: PermManagement", "Go", "Ведение реестра источников прав и предоставление информации о том, что доступно конкретному пользователю")
+            ContainerDb(permDb, "Perm Database", "PostgreSQL", "Данные прав доступа")
+        }
+
+        Boundary(partnerManagement, "Управление программами лояльности", "Поддомен") {
+            Container(loyalty, "Microservice: Loyalty Management", "Go", "Баллы, статусы, кэшбэки и прочее, что оформляется и оплачивается не в нашем ПО")
+            ContainerDb(loyaltyDb, "Loyalty Database", "PostgreSQL", "Данные баллов, статусов и т.д.")
+            Container(partnerLoyalty, "Microservice: PartnerLoyaltyManagement", "Go", "сервис-партнеры предлагающие оплату нашей подписки (по программе лояльности) у себя в ПО + любая друга бизнес-логика. 1 сервис на 1 интеграцию с партнером")
+            ContainerDb(partnerLoyaltyDb, "Partner Loyalty Database", "MongoDB", "Данные программ лояльности и их статус")
+        }
+    }
+}
+
+System_Ext(partnerService, "Partner Service", "Сервис-агрегатор контента")
+System_Ext(paymentProvider, "Payment Provider", "Платёжный шлюз (эквайринг)")
+System_Ext(loyaltyPartner, "Loyalty Partner", "Партнёр, оплачивающий подписку по своей программе лояльности")
+
+Rel(user, mobileApp, "Входит в систему")
+Rel(user, webApp, "Входит в систему")
+Rel(user, tvApp, "Входит в систему")
+
+Rel(mobileApp, bffMobileWeb, "Отправляет запросы, получает push-уведомления", "HTTPS/JSON")
+Rel(webApp, bffMobileWeb, "Отправляет запросы, получает push-уведомления", "HTTPS/JSON")
+Rel(tvApp, bffTv, "Отправляет запросы, получает push-уведомления", "HTTPS/JSON")
+
+Rel(bffMobileWeb, apiGateway, "Запрашивает данные и агрегирует ответ;" "REST/JSON")
+Rel(bffTv, apiGateway, "Запрашивает данные и агрегирует ответ;" "REST/JSON")
+Rel(eventBus, bffMobileWeb, "Доставляет события для push-уведомлений клиенту", "Consumer/TCP")
+Rel(eventBus, bffTv, "Доставляет события для push-уведомлений клиенту", "Consumer/TCP")
+
+Rel(apiGateway, userRegistry, "Маршрутизирует запросы регистрации, входа, восстановления доступа; валидирует токен", "REST/JSON")
+Rel(userRegistry, userDb, "Читает/пишет данные УЗ", "SQL/TCP")
+Rel(userRegistry, eventBus, "Публикует события о создании и изменении УЗ", "Producer/TCP")
+Rel(apiGateway, profileManagement, "Маршрутизирует запросы управления личными данными", "REST/JSON")
+Rel(profileManagement, profileDb, "Читает/пишет данные ЛК", "SQL/TCP")
+Rel(eventBus, profileManagement, "Доставляет события о создании УЗ и о персонализации", "Consumer/TCP")
+
+Rel(apiGateway, catalog, "Маршрутизирует запросы на просмотр каталога", "REST/JSON")
+Rel(catalog, catalogDb, "Читает/пишет данные каталога", "MongoDB Wire/TCP")
+Rel(eventBus, catalog, "Доставляет события о новых сервисах, изменениях прав доступа и персонализации", "Consumer/TCP")
+
+Rel(partnerService, apiGateway, "Публикует запрос о регистрации", "REST/JSON")
+Rel(apiGateway, serviceIntegration, "Маршрутизирует запросы на интеграцию сервисов", "REST/JSON")
+Rel(serviceIntegration, serviceDb, "Читает/пишет данные каталога сервисов", "MongoDB Wire/TCP")
+Rel(serviceIntegration, partnerService, "Забирает каталог и метаданные контента", "REST/JSON")
+Rel(serviceIntegration, eventBus, "Публикует события о добавлении нового сервиса", "Producer/TCP")
+
+Rel(apiGateway, personalizationOptions, "Маршрутизирует запросы на персонализацию", "REST/JSON")
+Rel(personalizationOptions, personalizationDb, "Читает/пишет данные персонализации", "SQL/TCP")
+Rel(personalizationOptions, eventBus, "Публикует события о персонализации", "Producer/TCP")
+Rel(eventBus, personalizationOptions, "Доставляет события о прогрессе просмотра", "Consumer/TCP")
+
+Rel(serviceRightsManagement, serviceRightsDb, "Читает/пишет данные о правах доступа", "SQL/TCP")
+Rel(serviceRightsManagement, eventBus, "Публикует события об изменении прав доступа", "Producer/TCP")
+
+Rel(apiGateway, playback, "Маршрутизирует запросы на воспроизведение контента", "REST/JSON")
+Rel(playback, playbackDb, "Читает/пишет контент", "S3 API/HTTPS")
+Rel(playback, perm, "Проверяет право пользователя на просмотр контента", "REST/JSON")
+Rel(playback, catalog, "Запрашивает метаданные контента и требования к устройству", "REST/JSON")
+Rel(playback, profileManagement, "Запрашивает устройства пользователя", "REST/JSON")
+Rel(playback, eventBus, "Публикует события о прогрессе просмотра", "Producer/TCP")
+
+Rel(apiGateway, product, "Маршрутизирует запросы на просмотр тарифов и цен", "REST/JSON")
+Rel(product, productDb, "Читает/пишет данные тарифов и цен", "SQL/TCP")
+Rel(sales, salesDb, "Читает/пишет данные скидок и акций", "SQL/TCP")
+
+Rel(apiGateway, sub, "Маршрутизирует запросы оформления и управления подпиской", "REST/JSON")
+Rel(sub, subDb, "Читает/пишет данные подписок", "SQL/TCP")
+Rel(sub, product, "Запрашивает состав и цену тарифного плана", "REST/JSON")
+Rel(sub, sales, "Запрашивает применимые скидки и акции", "REST/JSON")
+Rel(sub, payment, "Инициирует оплату и продление подписки", "REST/JSON")
+Rel(sub, eventBus, "Публикует события о статусе подписки", "Producer/TCP")
+
+Rel(apiGateway, payment, "Маршрутизирует запросы на оплату", "REST/JSON")
+Rel(payment, paymentDb, "Читает/пишет данные оплаты", "SQL/TCP")
+Rel(payment, paymentProvider, "Проводит платежи и возвраты", "HTTPS/JSON")
+Rel(paymentProvider, payment, "Уведомляет о статусе платежа", "Webhook/HTTPS")
+Rel(payment, eventBus, "Публикует события об оплатах и возвратах", "Producer/TCP")
+
+Rel(apiGateway, perm, "Маршрутизирует запросы о доступном пользователю контенте", "REST/JSON")
+Rel(perm, permDb, "Читает/пишет данные прав доступа", "SQL/TCP")
+Rel(eventBus, perm, "Доставляет события о подписках, оплатах и изменениях прав партнёров", "Consumer/TCP")
+
+Rel(apiGateway, loyalty, "Маршрутизирует запросы по баллам, статусам и кэшбэку", "REST/JSON")
+Rel(loyalty, loyaltyDb, "Читает/пишет данные баллов и статусов", "SQL/TCP")
+Rel(eventBus, loyalty, "Доставляет события об оплатах и подписках для начисления баллов", "Consumer/TCP")
+
+Rel(loyaltyPartner, apiGateway, "Передаёт запросы на оплату подписки по программе лояльности", "REST/JSON")
+Rel(apiGateway, partnerLoyalty, "Маршрутизирует запросы партнёрской программы лояльности", "REST/JSON")
+Rel(partnerLoyalty, partnerLoyaltyDb, "Читает/пишет данные партнёрских программ", "MongoDB Wire/TCP")
+Rel(partnerLoyalty, sub, "Оформляет и продлевает подписку по партнёрской программе", "REST/JSON")
+
+@enduml
