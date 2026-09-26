@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: proxy-service
-        image: {{ .Values.proxyService.image.repository }}:{{ .Values.proxyService.image.tag }}
+        image: "{{ .Values.proxyService.image.repository }}:{{ .Values.proxyService.image.tag }}"
         imagePullPolicy: {{ .Values.proxyService.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.proxyService.service.targetPort }}
@@ -68,8 +68,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   selector:
-      selector:
-  app: proxy-service
+    app: proxy-service
   ports:
   - port: {{ .Values.proxyService.service.port }}
     targetPort: {{ .Values.proxyService.service.targetPort }}
